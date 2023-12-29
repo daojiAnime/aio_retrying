@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "aio-retrying"
+version = "1.0.1"
+description = "new version async retrying package."
+authors = ["Daoji <daoji.chang@gmail.com>"]
+license = "MIT"
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.13"
+async-timeout = "^4.0.3"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.9"
+mypy = "^1.8.0"
+isort = "^5.13.2"
+pytest = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
