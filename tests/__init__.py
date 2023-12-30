@@ -1,11 +1,10 @@
+import logging
 import os
 
-os.environ['PYTHONUNBUFFERED'] = '1'
-os.environ['PYTHONASYNCIODEBUG'] = '1'
+import structlog
 
-import logging
+os.environ["PYTHONUNBUFFERED"] = "1"
+os.environ["PYTHONASYNCIODEBUG"] = "1"
+
 logging.basicConfig(level=logging.DEBUG)
-
-import asyncio
-
-asyncio.set_event_loop(None)
+test_logger = structlog.stdlib.get_logger("aio_retrying_test")

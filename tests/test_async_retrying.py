@@ -1,22 +1,14 @@
 import asyncio
 
-from functools import partial
-
-import pytest
-
-from async_retrying import callback, retry
+from aio_retrying import retry
 
 
-@pytest.mark.run_loop
-@asyncio.coroutine
-def test_smoke(loop):
+async def test_smoke():
     counter = 0
 
-    @retry(loop=loop)
-    @asyncio.coroutine
-    def fn():
+    @retry(retry_exceptions=(RuntimeError,), attempts=2)
+    async def fn():
         nonlocal counter
-
         counter += 1
 
         if counter == 1:
@@ -24,20 +16,17 @@ def test_smoke(loop):
 
         return counter
 
-    ret = yield from partial(fn)()
-
+    ret = await fn()
+    print(f"{ret=} | {counter=}")
     assert ret == counter
 
 
-@pytest.mark.run_loop
-@asyncio.coroutine
-def test_callback_delay(mocker, loop):
-    mocker.patch('asyncio.sleep')
+async def test_callback_delay(mocker):
+    mocker.patch("asyncio.sleep")
     counter = 0
 
-    @retry(callback=partial(callback, delay=5), loop=loop)
-    @asyncio.coroutine
-    def fn():
+    @retry(delay=5, retry_exceptions=(RuntimeError,), attempts=2)
+    async def fn():
         nonlocal counter
 
         counter += 1
@@ -47,13 +36,13 @@ def test_callback_delay(mocker, loop):
 
         return counter
 
-    ret = yield from partial(fn)()
+    ret = await fn()
 
     assert ret == counter
 
     expected = [
-        ((5,), {'loop': loop}),
-        ((10,), {'loop': loop}),
+        ((5,),),
+        ((5,),),
     ]
 
     assert asyncio.sleep.call_args_list == expected
