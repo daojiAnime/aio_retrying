@@ -13,9 +13,16 @@ from typing import Callable, Coroutine, Type, Tuple, Optional, Any, Union
 
 import async_timeout
 
-logger = logging.getLogger(__name__)
+try:
+    import structlog
 
-__version__ = "1.0.0"
+    logger = structlog.getLogger(__name__)
+except ImportError:
+    from logging import Logger
+
+    logger: Logger = logging.getLogger(__name__)
+
+__version__ = "1.0.2"
 
 propagate = forever = ...
 
@@ -35,10 +42,10 @@ def is_exception(obj):
 def retry(
     fn: Callable = None,
     *,
-    attempts: int = 3,
+    attempts: int = 0,
     callback: Optional[Callable] = None,
     fallback: Union[Callable, Type[BaseException], Any] = None,
-    timeout: int = None,
+    timeout: Union[int, float] = None,
     delay: int = 0,
     retry_exceptions: Tuple[Type[BaseException]] = (Exception,),
     fatal_exceptions: Tuple[Type[BaseException]] = (asyncio.CancelledError,),
@@ -82,18 +89,11 @@ def retry(
                 raise
             except _retry_exceptions as exc:
                 _attempts = "infinity" if attempts is forever else attempts
-                context = {
-                    "fn": fn,
-                    "attempt": attempt,
-                    "attempts": _attempts,
-                }
                 logger.debug(
-                    exc.__class__.__name__ + " -> Tried attempt #%(attempt)d from total %(attempts)s for %(fn)r",
-                    # noqa
-                    context,
+                    exc.__class__.__name__ + f" -> Tried attempt {attempt} from total {attempts} for {fn}",
                     exc_info=exc,
                 )
-                if attempt < attempts:
+                if attempts is forever or attempt < attempts:
                     await asyncio.sleep(delay)
                     return await wrapped(attempt=attempt + 1)
 
